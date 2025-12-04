@@ -22,7 +22,7 @@ def load_alarm():
                 data.get("active", True)
             )
     except:
-        return None, None, False
+        return None, None, True
 
 def save_active_state(state):
     try:
@@ -78,8 +78,6 @@ except KeyboardInterrupt:
 
     for pin in motor_pins:
         GPIO.output(pin, GPIO.LOW)
-
-    save_active_state(False)
 
 finally:
     GPIO.cleanup()
