@@ -19,11 +19,10 @@ def load_alarm():
             return (
                 data.get("hour"),
                 data.get("minute"),
-                data.get("duration"),
                 data.get("active", True)
             )
     except:
-        return None, None, None, False
+        return None, None, False
 
 def save_active_state(state):
     try:
@@ -41,7 +40,7 @@ print("Alarm system running...")
 
 try:
     while True:
-        alarm_hour, alarm_minute, buzz_duration, active = load_alarm()
+        alarm_hour, alarm_minute, active = load_alarm()
 
         if alarm_hour is None:
             time.sleep(5)
@@ -53,10 +52,10 @@ try:
         print(f"Current: {h:02d}:{m:02d} | Alarm: {alarm_hour:02d}:{alarm_minute:02d} | Active:{active}")
 
         if h == alarm_hour and m == alarm_minute and not alarm_triggered:
-            print("ALARM TRIGGERED")
+            print("Alarm triggered!")
 
             while True:
-                _, _, _, active = load_alarm()
+                _, _, active = load_alarm()
 
                 if not active:
                     print("Alarm stopped")
@@ -75,7 +74,7 @@ try:
         time.sleep(5)
 
 except KeyboardInterrupt:
-    print("\nCTRL+C detected")
+    print("Shutting down")
 
     for pin in motor_pins:
         GPIO.output(pin, GPIO.LOW)
