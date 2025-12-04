@@ -53,13 +53,13 @@ try:
         print(f"Current: {h:02d}:{m:02d} | Alarm: {alarm_hour:02d}:{alarm_minute:02d} | Active:{active}")
 
         if h == alarm_hour and m == alarm_minute and not alarm_triggered:
-            print("Alarm triggered!")
+            print("ALARM TRIGGERED")
 
             while True:
                 _, _, _, active = load_alarm()
 
                 if not active:
-                    print("Alarm stopped.")
+                    print("Alarm stopped")
                     break
 
                 for pin in motor_pins:
@@ -71,9 +71,6 @@ try:
                 time.sleep(2)
 
             alarm_triggered = True
-
-        if m != alarm_minute:
-            alarm_triggered = False
 
         time.sleep(5)
 
