@@ -3,18 +3,18 @@ import time
 from datetime import datetime
 import json
 
-MOTOR_PINS = [17, 18, 27, 22]
-CONFIG_FILE = "alarm_config.json"
+motor_pins = [17, 18, 27, 22]
+config_file = "alarm_config.json"
 
 GPIO.setmode(GPIO.BCM)
 
-for pin in MOTOR_PINS:
+for pin in motor_pins:
     GPIO.setup(pin, GPIO.OUT)
     GPIO.output(pin, GPIO.LOW)
 
 def load_alarm():
     try:
-        with open(CONFIG_FILE, "r") as f:
+        with open(config_file, "r") as f:
             data = json.load(f)
             return (
                 data.get("hour"),
@@ -22,13 +22,22 @@ def load_alarm():
                 data.get("duration"),
                 data.get("active", True)
             )
-    except Exception as e:
-        print("Config load error:", e)
+    except:
         return None, None, None, False
+
+def save_active_state(state):
+    try:
+        with open(config_file, "r") as f:
+            data = json.load(f)
+        data["active"] = state
+        with open(config_file, "w") as f:
+            json.dump(data, f, indent=4)
+    except:
+        pass
 
 alarm_triggered = False
 
-print("Alarm system active.")
+print("Alarm system running...")
 
 try:
     while True:
@@ -50,14 +59,14 @@ try:
                 _, _, _, active = load_alarm()
 
                 if not active:
-                    print("Alarm stopped via JSON")
+                    print("Alarm stopped.")
                     break
 
-                for pin in MOTOR_PINS:
+                for pin in motor_pins:
                     GPIO.output(pin, GPIO.HIGH)
                 time.sleep(4)
 
-                for pin in MOTOR_PINS:
+                for pin in motor_pins:
                     GPIO.output(pin, GPIO.LOW)
                 time.sleep(2)
 
@@ -69,7 +78,13 @@ try:
         time.sleep(5)
 
 except KeyboardInterrupt:
-    print("Shutting down...")
+    print("\nCTRL+C detected")
+
+    for pin in motor_pins:
+        GPIO.output(pin, GPIO.LOW)
+
+    save_active_state(False)
 
 finally:
     GPIO.cleanup()
+    print("GPIO cleaned up")
