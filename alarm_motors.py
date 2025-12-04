@@ -24,6 +24,7 @@ def load_alarm():
     except:
         return None, None, True
 
+"""
 def save_active_state(state):
     try:
         with open(config_file, "r") as f:
@@ -33,6 +34,7 @@ def save_active_state(state):
             json.dump(data, f, indent=4)
     except:
         pass
+"""
 
 alarm_triggered = False
 
@@ -76,6 +78,8 @@ try:
 except KeyboardInterrupt:
     print("Shutting down")
 
+    alarm_triggered = False
+    
     for pin in motor_pins:
         GPIO.output(pin, GPIO.LOW)
 
