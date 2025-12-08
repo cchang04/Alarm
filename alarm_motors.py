@@ -24,18 +24,6 @@ def load_alarm():
     except:
         return None, None, True
 
-"""
-def save_active_state(state):
-    try:
-        with open(config_file, "r") as f:
-            data = json.load(f)
-        data["active"] = state
-        with open(config_file, "w") as f:
-            json.dump(data, f, indent=4)
-    except:
-        pass
-"""
-
 alarm_triggered = False
 
 print("Alarm system running...")
