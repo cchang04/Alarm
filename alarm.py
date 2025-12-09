@@ -44,7 +44,7 @@ GPIO.setup(BTN_SNOOZE, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(BTN_HOUR, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(BTN_MIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-# Helper functions
+# Functions
 def button_pressed(pin):
     return GPIO.input(pin) == GPIO.LOW
 
@@ -119,8 +119,6 @@ async def connect_loop():
         connected = False
         await asyncio.sleep(2)
 
-# ------------- FLICKER-FREE LCD LOOP WITH ROW CLEARING -------------
-
 async def lcd_loop():
     global mode, previous_mode, alarm_hour, alarm_min
 
@@ -129,7 +127,6 @@ async def lcd_loop():
 
     while True:
         try:
-            # -------- Build 4 lines of desired display text --------
             if mode == "time_set":
                 t = get_display_time()
                 new_lines = [
@@ -159,13 +156,11 @@ async def lcd_loop():
                     f"Status: {safe_status}".ljust(20)
                 ]
 
-            # -------- Clear everything if mode changed --------
             if mode != previous_mode:
                 lcd.clear()
                 prev_chars = [[" "] * 20 for _ in range(4)]
                 previous_mode = mode
 
-            # -------- DIFF EACH CHARACTER --------
             for row in range(4):
                 for col in range(20):
                     new_c = new_lines[row][col]
@@ -178,8 +173,6 @@ async def lcd_loop():
             print("LCD ERROR:", e)
 
         await asyncio.sleep(0.1)
-
-# ---------------- BUTTON LOOP ----------------
 
 async def button_loop():
     global mode, alarm_hour, alarm_min, last_input_time
@@ -220,8 +213,6 @@ async def button_loop():
 
         await asyncio.sleep(0.02)
 
-# ---------------- ALARM LOGIC ----------------
-
 async def check_alarm():
     global last_alarm_time
 
@@ -229,21 +220,17 @@ async def check_alarm():
     hour = now.hour
     minute = now.minute
 
-    # ---- STOP alarm (MIN button) ----
     if button_pressed(BTN_MIN):
         await send_vibration_command("STOP")
         # Block alarm for this minute ONLY
         last_alarm_time = (hour, minute)
         return
 
-    # ---- SNOOZE alarm ----
     if last_alarm_time == (hour, minute) and button_pressed(BTN_SNOOZE):
         await send_vibration_command("SNOOZE")
         last_alarm_time = None  # allow snooze retrigger
         return
 
-    # ---- Trigger alarm at correct time ----
-    # Only if we haven't triggered at THIS exact minute
     if (hour, minute) == (alarm_hour, alarm_min) and last_alarm_time != (hour, minute):
         print("ALARM TIME ? VIB_ON")
         await send_vibration_command("VIB_ON")
@@ -253,8 +240,6 @@ async def alarm_loop():
     while True:
         await check_alarm()
         await asyncio.sleep(1)
-
-# ---------------- MAIN ----------------
 
 async def main():
     await asyncio.gather(
