@@ -166,7 +166,8 @@ async def lcd_loop():
             lcd.cursor_pos = (1, 0)
             lcd.write_string(f"Date: {t:%m-%d-%Y}".ljust(20))
             lcd.cursor_pos = (2, 0)
-            lcd.write_string(f"Battery: {battery_percent}%".ljust(20))
+            safe_batt = str(battery_percent)
+            lcd.write_string(f"Battery: {safe_batt}%".ljust(20))
             lcd.cursor_pos = (3, 0)
             stat = "Connected" if connected else "Disconnected"
             lcd.write_string(f"Status: {stat}".ljust(20))
@@ -234,40 +235,39 @@ async def send_vibration_command(command):
 
 async def check_alarm():
     global vibration_triggered_today
+
     now = get_display_time()
-    current_hour = now.hour
-    current_min = now.minute
+    hour = now.hour
+    minute = now.minute
 
-    # STOP VIBRATION but do NOT reset daily alarm
     if button_pressed(BTN_MIN):
-        await send_vibration_command("VIB_OFF")
+        await send_vibration_command("STOP")
+        vibration_triggered_today = False
+        return
 
-    # DAILY reset at midnight
-    if current_hour == 0 and current_min == 0:
+    if vibration_triggered_today and button_pressed(BTN_SNOOZE):
+        await send_vibration_command("SNOOZE")
+        vibration_triggered_today = False
+        return
+
+    if hour == 0 and minute == 0:
         vibration_triggered_today = False
 
-    # Alarm match
-    if (current_hour == alarm_hour and current_min == alarm_min
-        and not vibration_triggered_today):
-        print("ALARM TIME REACHED - TRIGGERING VIBRATION")
+    if hour == alarm_hour and minute == alarm_min and not vibration_triggered_today:
+        print("ALARM TIME → VIB_ON")
         await send_vibration_command("VIB_ON")
-
-        # Snooze loop (checks for snooze for 5 minutes)
-        for _ in range(300):
-            if button_pressed(BTN_SNOOZE):
-                await send_vibration_command("VIB_OFF")
-                await asyncio.sleep(300)  # 5-minute snooze
-                await send_vibration_command("VIB_ON")
-                break
-            await asyncio.sleep(1)
-
         vibration_triggered_today = True
-
-    # Yield control so loop doesn't freeze the system
-    await asyncio.sleep(1)
 
 async def alarm_loop():
     while True:
+
+        if button_pressed(BTN_MIN):
+            await send_vibration_command("STOP")
+            global vibration_triggered_today
+            vibration_triggered_today = False
+            await asyncio.sleep(1)
+            continue
+
         await check_alarm()
         await asyncio.sleep(1)  # check every second
 
