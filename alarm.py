@@ -222,7 +222,7 @@ async def check_alarm():
 
     if button_pressed(BTN_MIN):
         await send_vibration_command("STOP")
-        # Block alarm for this minute ONLY
+        # Block alarm for this minute only
         last_alarm_time = (hour, minute)
         return
 
